@@ -102,13 +102,6 @@ This is FastAPI's interactive Swagger UI — every endpoint can be tested direct
 - Implementing the cache-aside pattern with Redis, including invalidation on writes
 - Offloading slow work to a background worker with Celery, and polling for results instead of blocking requests
 - Running a multi-service application (API + cache + worker) with Docker Compose
-
-## Notes / Gotchas Learned Along the Way
-
-- Uvicorn must bind to `0.0.0.0` inside a container, not `localhost` — otherwise the app is unreachable from outside the container even with ports mapped correctly.
-- Inside Docker's network, services reach each other by service name (e.g. `redis`), not `localhost`.
-- Celery workers don't hot-reload — restart the worker container after changing task code.
-- Task functions run in a separate process from the API, so they need their own database session rather than reusing one from the request.
-
+  
 ## License
 MIT
