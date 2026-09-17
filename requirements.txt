@@ -1,0 +1,9 @@
+redis
+sqlalchemy
+sqlmodel
+fastapi
+uvicorn
+alembic
+python-dotenv
+psycopg[binary]
+psycopg2-binary
