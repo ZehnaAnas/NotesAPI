@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Depends
+from fastapi import FastAPI,Depends,APIRouter
 from typing import Annotated
 import uvicorn
 from sqlmodel import Session,select
@@ -7,6 +7,11 @@ import redis
 from Redis.cache import RedisCache
 from Redis.primary import MockPrimaryStore
 import json
+from celery_app import celery_app
+from celery.result import AsyncResult
+from tasks import generate_digest
+
+router = APIRouter()
 
 r = redis.Redis(host='redis', port=6379,decode_responses=True)
 primary = MockPrimaryStore(read_latency_ms=60)
@@ -55,6 +60,23 @@ def get_one_note(note_id:int,session:SessionDep):
     note = session.get(Note,note_id)
     return note
 
+@router.post("/notes/digest")
+def trigger_digest():
+    task = generate_digest.delay()
+    return {"task_id":task.id}
+
+@router.get("/notes/digest/{task_id}")
+def get_digest_status(task_id:str):
+    result = AsyncResult(task_id, app=celery_app)
+    if result.state == "PENDING":
+        return {"status":"pending"}
+    elif result.state == "SUCCESS":
+        return {"status":"success","result":result.result}
+    elif result.state == "FAILURE":
+        return {"status":"failed","error":str(result.result)}
+    else:
+        return {"status":result.state}
+    
 @app.put("/notes/{note_id}")
 def update_note(note_id:int,session:SessionDep,n:Note):
     notes = session.get(Note,note_id)

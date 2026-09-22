@@ -1,6 +1,7 @@
 services:
   web:
     build: .
+    command: celery -A celery_app worker --loglevel=info
     env_file:
       - .env
     ports:
@@ -10,6 +11,7 @@ services:
       - REDIS_PORT=6379
     depends_on:
       - redis
+    restart: on-failure
   redis:
     image: redis:alpine
     ports:
